@@ -450,14 +450,14 @@ public:
             const std::array<size_t, 2> colors { 0xFF0000FF, 0xFFFFFFFF };
             for(; i < field().size() - remainder;)
             {
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFFFFFFFF : 0xFF0000FF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
             }
             while(i < field().size())
             {
@@ -716,15 +716,12 @@ void fifteen_op(Chip8& chip8)
         break;
     }
 }
-
 uint32_t hex_to_int(char hex)
 {
     hex |= 32;
-    if(hex >= 'a')
-    {
-        return hex = hex - 'a' + 10;
-    }
-    return hex -= '0';
+    uint32_t num = hex & 15;
+    num += (hex >= 'a') ? 9 : 0;
+    return num;
 }
 uint32_t hex_to_int(const std::string_view hex)
 {
