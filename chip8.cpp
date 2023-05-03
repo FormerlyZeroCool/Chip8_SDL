@@ -448,16 +448,17 @@ public:
             uint64_t i = 0;
             const uint64_t remainder = field().size() & 7;
             const std::array<size_t, 2> colors { 0xFF0000FF, 0xFFFFFFFF };
+            const auto& screen = this->screen();
             for(; i < field().size() - remainder;)
             {
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
-                lockedPixels[i++] = this->screen()[i] ? 0xFF0000FF : 0xFFFFFFFF;
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
+                lockedPixels[i++] = colors[screen[i]];
             }
             while(i < field().size())
             {
