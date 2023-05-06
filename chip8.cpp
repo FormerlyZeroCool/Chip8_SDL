@@ -415,28 +415,24 @@ public:
     }
     bool operator[](size_t index)  
     {
-        if(index < field().size())
-            return (field()[index]);
+        if(index < this->screen().size())
+            return (this->screen()[index]);
         else
             throw std::string("Error accessing outside bounds" + std::to_string((int64_t) index) + "\n");
     }
     void set_place(size_t index, bool value)
     {
-        if(index < field().size())
-            field()[index] = value;
+        if(index < this->screen().size())
+            this->screen()[index] = value;
         //else
           //  std::cerr<<std::string("Error accessing outside bounds" + std::to_string((int64_t) index));
     }
-    std::array<bool, 64*32>& field()
-    {
-        return this->screen_buf.bit_buf;
-    }
     void randomize()
     {
-        for(uint64_t i = 0; i < field().size(); i++)
+        for(uint64_t i = 0; i < this->screen().size(); i++)
         {
             srand(i);
-            field()[i] = random() % 100 > 60;
+            this->screen()[i] = random() % 100 > 60;
         }
     }
     void render_to_texture()
@@ -446,23 +442,25 @@ public:
         if(!SDL_LockTexture(render_buf, NULL, (void**)&lockedPixels, &pitch)) {
             //we might just try to ignore pitch
             uint64_t i = 0;
-            const uint64_t remainder = field().size() & 7;
+            const uint64_t remainder = this->screen().size() & 7;
             const std::array<size_t, 2> colors { 0xFF0000FF, 0xFFFFFFFF };
-            const auto& screen = this->screen();
-            for(; i < field().size() - remainder;)
+            const auto& screen = this->screen_bytes();
+            
+            for(; i < this->screen().size();)
             {
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
-                lockedPixels[i++] = colors[screen[i]];
+                const auto byte_index = i >> 3;
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
+                lockedPixels[i++] = colors[((screen[byte_index] >> (i & 7)) & 1)];
             }
-            while(i < field().size())
+            while(i < this->screen().size())
             {
-                lockedPixels[i] = colors[field()[i]];
+                lockedPixels[i] = colors[((screen[i] >> (i & 7)) & 1)];
             }
             SDL_UnlockTexture(render_buf);
         }
@@ -624,16 +622,13 @@ void thirteen_op(Chip8& chip8)
     const auto x = (chip8.rx().ui & (chip8.width - 1));
     uint16_t y = (chip8.ry().ui & (chip8.height - 1)) * chip8.width;
     const auto n = chip8.lb() & 0xF;
-    //const uint8_t mask = x + 8 > 64 ? ~(1 << (x + 8 - chip8.width)) : 0;
-    //std::cout<<"Rendering instruction draw: x: "<<x<<" y: "<<y<<" height: "<< n<<"\n";
-    bool collision = false;
+    uint8_t collision = false;
+    auto& screen = chip8.screen_bytes();
     for(int i = 0; i < n; i++, y += chip8.width)
     {
-        for(int j = 0; j < 8 & j + x < chip8.width & y < chip8.screen().size(); j++)
-        {
-            collision = chip8.screen()[y + x + j] | collision;
-            chip8.screen()[y + x + j] ^= (chip8.mem()[chip8.I + i] >> (7 - j)) & 1;
-        }
+        const auto screen_address = (x >> 3) + (y >> 3); // convert bit screen_address to byte
+        collision = chip8.mem()[chip8.I + i] & screen[screen_address] | collision;
+        screen[screen_address] ^= chip8.mem()[chip8.I + i];
     }    
     chip8.set_flag(collision);  
 }
@@ -730,8 +725,8 @@ uint32_t hex_to_int(const std::string_view hex)
     uint32_t result = 0;
     for(int i = hex.size() - 1; i >= 0; i--)
     {
-        result += hex_to_int(hex[i]) << (mag << 2);
-        mag++;
+        result += hex_to_int(hex[i]) * mag;
+        mag <<= 4;
     }
     return result;
 }
